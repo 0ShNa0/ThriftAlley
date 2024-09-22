@@ -2,22 +2,22 @@
 
 module.exports = {
   root: true,
-  extends: ['expo', 'eslint:recommended'],
+  extends: ["expo", "eslint:recommended"],
   parserOptions: {
     ecmaVersion: 2021,
-    sourceType: 'module',
+    sourceType: "module",
   },
   rules: {
-    'semi': ['error', 'always'], // Enforces semicolons
-    'quotes': ['error', 'single'], // Enforces single quotes
+    semi: ["error", "always"], // Enforces semicolons
+    quotes: ["error", "single"], // Enforces single quotes
   },
   ignorePatterns: [
-      '**/*.test.js',
-      '**/*.test.ts',
-      '**/*.spec.js',
-      '**/*.spec.ts',
-      '__tests__/',
-      'tests/',
-      'test/'
-    ]
+    "**/*.test.js",
+    "**/*.test.ts",
+    "**/*.spec.js",
+    "**/*.spec.ts",
+    "__tests__/",
+    "tests/",
+    "test/",
+  ],
 };
