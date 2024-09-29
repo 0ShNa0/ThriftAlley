@@ -18,8 +18,8 @@ const productSchema = new Schema(
         "jeans",
         "trousers",
         "dress",
-        "Top",
-        "T-shirt",
+        "top",
+        "t-shirt",
         "leggings",
         "kurta",
         "pyjama",
@@ -46,6 +46,7 @@ const productSchema = new Schema(
       type: Number,
       required: true,
       default: 0,
+      min:0
     },
     colour: {
       type: String,
@@ -76,12 +77,13 @@ const productSchema = new Schema(
       required: true,
       index: true,
     },
-    images: [
+    images: 
       {
-        type: String,
+        type: [String],
         required: true,
       },
-    ],
+
+    
     quantity: {
       type: Number,
       required: true,
@@ -90,6 +92,6 @@ const productSchema = new Schema(
   { timestamps: true }
 );
 
-productSchema.plugin("mongooseAggregatePaginate");
+productSchema.plugin(mongooseAggregatePaginate);
 
 export const Product = mongoose.model("Product", productSchema);
