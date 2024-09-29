@@ -28,12 +28,16 @@ const addProduct = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "No files uploaded. Please upload images." });
   }
 
-  const urls = [];
+  const imageUrls = [];
   const files = req.files;
   for (const file of files) {
     const { path } = file;
     const newPath = await uploadOnCloudinary(path);
-    urls.push(newPath);
+    if (newPath) {
+      imageUrls.push(newPath.secure_url);
+    } else {
+      return res.status(500).json({ message: "Error uploading image to Cloudinary" });
+    }
   }
 
   const newProduct = await Product.create({
@@ -43,7 +47,7 @@ const addProduct = asyncHandler(async (req, res) => {
     price,
     colour,
     size,
-    images:urls.map( url => url.res ),
+    images:imageUrls,
     quantity,
     isSold:false
   });
