@@ -16,10 +16,11 @@ const cartSchema = new Schema({
       quantity: {
         type: Number,
         required: true,
-        default: 1,
+        min: 1,
       },
     },
   ],
+
   totalAmount: {
     type: Number,
     default: 0,
@@ -30,4 +31,4 @@ const cartSchema = new Schema({
   },
 });
 
-const Cart = mongoose.model("Cart", cartSchema);
+export const Cart = mongoose.model("Cart", cartSchema);

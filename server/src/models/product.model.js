@@ -46,7 +46,7 @@ const productSchema = new Schema(
       type: Number,
       required: true,
       default: 0,
-      min:0
+      min: 0,
     },
     colour: {
       type: String,
@@ -77,13 +77,11 @@ const productSchema = new Schema(
       required: true,
       index: true,
     },
-    images: 
-      {
-        type: [String],
-        required: true,
-      },
+    images: {
+      type: [String],
+      required: true,
+    },
 
-    
     quantity: {
       type: Number,
       required: true,
