@@ -62,16 +62,26 @@ const getSellerProducts = asyncHandler(async (req, res) => {
   const { userId } = req.params;
   const user = await User.findById(userId);
   if (!user) {
-    return res.status(404).json({ message: "User not found" });
+    ApiError(404,"User not found");
   }
   const products = await Product.find({ seller: userId });
   if (!products || products.length === 0) {
-    return res.status(404).json({ message: "No clothes found for this user" });
+    ApiError(404,"No clothes found for this user");
   }
-  return res.status(200).json({
-    message: "Listed clothes found",
-    data: products,
-  });
+  res.status(200).json({message:"Listed clothes found",data:products});
 });
 
-export { addProduct, getSellerProducts };
+const searchProducts=asyncHandler(async(req,res)=>{
+const products= await Product.find({});
+ if(!products)
+ {
+  throw new ApiError(400,"No products found");
+ }
+ res.status(200).json({
+  success: true,
+  message: "Products retrieved successfully",
+  data: products
+});
+});
+
+export { addProduct, getSellerProducts ,searchProducts };
