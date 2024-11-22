@@ -8,24 +8,22 @@ const addToCart = asyncHandler(async (req, res) => {
   const { productId, userId } = req.params;
   const { quantity } = req.body;
 
-  // Validate quantity
+
   if (!quantity || quantity <= 0) {
     throw new ApiError(400, "Quantity must be greater than 0");
   }
 
-  // Find user and their cart
-  const user = await User.findById(userId).populate("cart"); 
+   const user = await User.findById(userId).populate("cart"); 
   if (!user) {
     throw new ApiError(404, "User not found");
   }
 
-  // Find the product
-  const addingProduct = await Product.findById(productId);
+   const addingProduct = await Product.findById(productId);
   if (!addingProduct) {
     throw new ApiError(404, "Product not found");
   }
 
-  
+
   if (addingProduct.isSold || addingProduct.quantity < Number(quantity)) {
     throw new ApiError(400, "Product is not available in the desired quantity");
   }
@@ -50,8 +48,16 @@ const addToCart = asyncHandler(async (req, res) => {
   );
 
   if (existingProduct) {
- 
+    const maxAddableQuantity = addingProduct.quantity - existingProduct.quantity;
     existingProduct.quantity = Number(existingProduct.quantity) + Number(quantity);
+   
+
+    if (quantity > maxAddableQuantity) {
+      throw new ApiError(
+        400,
+        `Only ${maxAddableQuantity} more items available for this product`
+      );
+    }
   } else {
    
     cart.products.push({ product: productId, quantity: Number(quantity) });
@@ -93,6 +99,11 @@ const removeFromCart = asyncHandler(async (req, res) => {
   );
   const productInCart = yourCart.products[productIndex];
    const isProduct=await Product.findById(productId);
+   if (Number(quantity) > productInCart.quantity) 
+   {
+    throw new ApiError(400,"quantity exceeds cart allocation");
+    
+   }
   if (Number(quantity) < productInCart.quantity) {
    
     productInCart.quantity -= Number(quantity);
