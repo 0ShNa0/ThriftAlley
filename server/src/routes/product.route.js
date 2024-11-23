@@ -2,7 +2,7 @@ import { Router } from "express";
 import {
   addProduct,
   getSellerProducts,
-  searchProducts
+  searchProducts,
 } from "../controllers/product.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 

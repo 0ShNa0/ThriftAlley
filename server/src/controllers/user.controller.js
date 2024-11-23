@@ -81,15 +81,15 @@ const loginUser = asyncHandler(async (req, res) => {
           user: User,
           accessToken,
           refreshToken,
+          name: user.fullName,
         },
         "User logged in successfully"
       )
     );
 });
 
-const logoutUser =asyncHandler(async(req,res)=>{
-     const user=User.findById()
-
+const logoutUser = asyncHandler(async (req, res) => {
+  const user = User.findById();
 });
 
-export { registerUser, loginUser ,logoutUser };
+export { registerUser, loginUser, logoutUser };

@@ -51,7 +51,9 @@ const addProduct = asyncHandler(async (req, res) => {
     user.listedClothes.push(newProduct._id);
     await user.save();
     console.log("Product saved:", newProduct);
-    ApiResponse(201, newProduct, "Product saved successfully");
+    res
+      .status(201)
+      .json(new ApiResponse(201, newProduct, "Product saved successfully"));
   } catch (error) {
     console.error("Error saving product:", error);
     throw new ApiError(500, "Internal Server Error");
@@ -62,26 +64,25 @@ const getSellerProducts = asyncHandler(async (req, res) => {
   const { userId } = req.params;
   const user = await User.findById(userId);
   if (!user) {
-    ApiError(404,"User not found");
+    ApiError(404, "User not found");
   }
   const products = await Product.find({ seller: userId });
   if (!products || products.length === 0) {
-    ApiError(404,"No clothes found for this user");
+    ApiError(404, "No clothes found for this user");
   }
-  res.status(200).json({message:"Listed clothes found",data:products});
+  res.status(200).json({ message: "Listed clothes found", data: products });
 });
 
-const searchProducts=asyncHandler(async(req,res)=>{
-const products= await Product.find({});
- if(!products)
- {
-  throw new ApiError(400,"No products found");
- }
- res.status(200).json({
-  success: true,
-  message: "Products retrieved successfully",
-  data: products
-});
+const searchProducts = asyncHandler(async (req, res) => {
+  const products = await Product.find({});
+  if (!products) {
+    throw new ApiError(400, "No products found");
+  }
+  res.status(200).json({
+    success: true,
+    message: "Products retrieved successfully",
+    data: products,
+  });
 });
 
-export { addProduct, getSellerProducts ,searchProducts };
+export { addProduct, getSellerProducts, searchProducts };
