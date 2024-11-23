@@ -82,7 +82,7 @@ const loginUser = asyncHandler(async (req, res) => {
           accessToken,
           refreshToken,
           name: user.fullName,
-          userID:user._id
+          userID: user._id,
         },
         "User logged in successfully"
       )

@@ -32,7 +32,6 @@ const addProduct = asyncHandler(async (req, res) => {
       throw new ApiError(500, "Error uploading image to Cloudinary");
     }
   }
-
   const newProduct = await Product.create({
     name,
     garmentType,
@@ -83,4 +82,56 @@ const searchProducts = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "Products retrieved successfully", products));
 });
 
-export { addProduct, getSellerProducts, searchProducts };
+const incrementProduct = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const { quantity } = req.body;
+  const theProduct = await Product.findById(productId);
+  if (!theProduct) {
+    throw new ApiError(404, "Product not found");
+  }
+  theProduct.quantity += Number(quantity);
+  try {
+    await theProduct.save();
+    console.log("Product saved:", theProduct);
+    res
+      .status(201)
+      .json(new ApiResponse(201, theProduct, "Product saved successfully"));
+  } catch (error) {
+    console.error("Error saving product:", error);
+    throw new ApiError(500, "Internal Server Error");
+  }
+});
+
+const decrementProduct = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const { quantity } = req.body;
+  const theProduct = await Product.findById(productId);
+  if (!theProduct) {
+    throw new ApiError(404, "Product not found");
+  }
+  if (Number(quantity) > theProduct.quantity) {
+    throw new ApiError(404, "Reduction quantity exceeds limits");
+  } else if (Number(quantity) < theProduct.quantity) {
+    theProduct.quantity -= Number(quantity);
+    await theProduct.save();
+    res.status(200).json(new ApiResponse(200, "Item reduced", theProduct));
+  } else {
+    const userId = theProduct.seller;
+    await User.updateOne(
+      { _id: userId },
+      { $pull: { products: { product: productId } } }
+    );
+    await Product.findByIdAndDelete(productId);
+    const user = await User.findById(userId);
+    await user.save();
+    res.status(200).json(new ApiResponse(200, "Item deleted", user));
+  }
+});
+
+export {
+  addProduct,
+  getSellerProducts,
+  searchProducts,
+  incrementProduct,
+  decrementProduct,
+};

@@ -24,12 +24,6 @@ const userSchema = new Schema(
         ref: "Product",
       },
     ],
-    listedClothes: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Product",
-      },
-    ],
     orders: [
       {
         type: mongoose.Schema.Types.ObjectId,
