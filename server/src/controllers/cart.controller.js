@@ -126,4 +126,25 @@ const removeFromCart = asyncHandler(async (req, res) => {
   }
 });
 
-export { addToCart, removeFromCart };
+const fetchCart = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+  const yourCart = await Cart.findById(user?.cart._id);
+  if (!yourCart) {
+    throw new ApiError(404, "Cart not found");
+  }
+  try {
+    res.status(200).json({
+      message: "Cart fetched successfully",
+      data: yourCart,
+    });
+  } catch (error) {
+    console.error("Error updating cart:", error);
+    throw new ApiError(500, "Internal Server Error");
+  }
+});
+
+export { addToCart, removeFromCart, fetchCart };

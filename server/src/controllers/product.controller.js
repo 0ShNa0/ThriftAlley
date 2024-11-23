@@ -70,7 +70,7 @@ const getSellerProducts = asyncHandler(async (req, res) => {
   if (!products || products.length === 0) {
     ApiError(404, "No clothes found for this user");
   }
-  res.status(200).json({ message: "Listed clothes found", data: products });
+  res.status(200).json(new ApiResponse(200, "Listed clothes found", products));
 });
 
 const searchProducts = asyncHandler(async (req, res) => {
@@ -78,11 +78,9 @@ const searchProducts = asyncHandler(async (req, res) => {
   if (!products) {
     throw new ApiError(400, "No products found");
   }
-  res.status(200).json({
-    success: true,
-    message: "Products retrieved successfully",
-    data: products,
-  });
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Products retrieved successfully", products));
 });
 
 export { addProduct, getSellerProducts, searchProducts };
