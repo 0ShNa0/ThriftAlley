@@ -64,7 +64,7 @@ const addToCart = asyncHandler(async (req, res) => {
 
   try {
     await cart.save();
-    await user.save();
+    await user.save({ validateBeforeSave: false });
 
     res.status(200).json({
       message: "Product added to cart successfully",

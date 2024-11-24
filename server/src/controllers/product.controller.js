@@ -7,8 +7,8 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const addProduct = asyncHandler(async (req, res) => {
   const { name, garmentType, price, colour, size, quantity } = req.body;
-  const { userId } = req.params;
-  console.log(req.body);
+  const userId = req.user._id;
+
   if (!name || !garmentType || !price || !colour || !size || !quantity) {
     throw new ApiError(400, "All fields are required");
   }
@@ -48,7 +48,7 @@ const addProduct = asyncHandler(async (req, res) => {
   try {
     await newProduct.save();
     user.listedClothes.push(newProduct._id);
-    await user.save();
+    await user.save({ validateBeforeSave: false });
     console.log("Product saved:", newProduct);
     res
       .status(201)
@@ -60,7 +60,7 @@ const addProduct = asyncHandler(async (req, res) => {
 });
 
 const getSellerProducts = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
+  const userId = req.user._id;
   const user = await User.findById(userId);
   if (!user) {
     ApiError(404, "User not found");
@@ -123,7 +123,7 @@ const decrementProduct = asyncHandler(async (req, res) => {
     );
     await Product.findByIdAndDelete(productId);
     const user = await User.findById(userId);
-    await user.save();
+    await user.save({ validateBeforeSave: false });
     res.status(200).json(new ApiResponse(200, "Item deleted", user));
   }
 });
