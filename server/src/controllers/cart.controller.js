@@ -5,9 +5,9 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 
 const addToCart = asyncHandler(async (req, res) => {
-  const { productId, userId } = req.params;
+  const { productId } = req.params;
   const { quantity } = req.body;
-
+  const userId=req.user._id;
   if (!quantity || quantity <= 0) {
     throw new ApiError(400, "Quantity must be greater than 0");
   }
@@ -77,9 +77,9 @@ const addToCart = asyncHandler(async (req, res) => {
 });
 
 const removeFromCart = asyncHandler(async (req, res) => {
-  const { productId, userId } = req.params;
+  const { productId }= req.params;
   const { quantity } = req.body;
-
+  const userId=req.user._id;
   const user = await User.findById(userId);
   if (!user) {
     throw new ApiError(404, "User not found");
@@ -127,7 +127,7 @@ const removeFromCart = asyncHandler(async (req, res) => {
 });
 
 const fetchCart = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
+  const userId = req.user._id;
   const user = await User.findById(userId);
   if (!user) {
     throw new ApiError(404, "User not found");

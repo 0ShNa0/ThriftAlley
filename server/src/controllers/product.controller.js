@@ -63,11 +63,11 @@ const getSellerProducts = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const user = await User.findById(userId);
   if (!user) {
-    ApiError(404, "User not found");
+   throw new ApiError(404, "User not found");
   }
   const products = await Product.find({ seller: userId });
   if (!products || products.length === 0) {
-    ApiError(404, "No clothes found for this user");
+    throw new ApiError(404, "No clothes found for this user");
   }
   res.status(200).json(new ApiResponse(200, "Listed clothes found", products));
 });
