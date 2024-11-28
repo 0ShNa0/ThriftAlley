@@ -195,7 +195,7 @@ const SellerWindow = () => {
 
       setLoading(true); // Start loading when fetch starts
       try {
-        console.log('ppp'+ accessToken);
+        
         const response = await fetch(
           'http://localhost:8000/api/v1/products/getSellerProducts',
           {

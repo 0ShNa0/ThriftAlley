@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Button,
   StyleSheet,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 interface UserBarProps {
   onLogin: (loggedIn: boolean, name: string, accessToken: string) => void;
 }
@@ -21,6 +22,25 @@ const UserBar: React.FC<UserBarProps> = ({ onLogin }) => {
   const [formData, setFormData] = useState({ email: '', password: '', fullName: '' });
   const [errors, setErrors] = useState({ email: '', password: '', fullName: '' });
   const [infoMessage, setInfoMessage] = useState('');
+
+// Check if user is already logged in when component mounts
+useEffect(() => {
+  const checkLoginStatus = async () => {
+    try {
+      const token = await AsyncStorage.getItem('accessToken');
+      if (token) {
+        const userName = await AsyncStorage.getItem('username');
+        setAccessToken(token);
+        setUsername(userName || '');
+        setLoggedIn(true);
+        onLogin(true, userName || '', token);
+      }
+    } catch (error) {
+      console.error('Error retrieving data from AsyncStorage:', error);
+    }
+  };
+  checkLoginStatus();
+}, []);
 
 
 const validateFields = () => {
@@ -55,6 +75,11 @@ const handleLogin = async () => {
       setUsername(result.data.name);
       setAccessToken(result.data.accessToken);
       onLogin(true, result.data.name, result.data.accessToken);
+
+              // Store the access token and username in AsyncStorage
+              await AsyncStorage.setItem('accessToken', result.data.accessToken);
+              await AsyncStorage.setItem('username', result.data.name);
+
       setModalVisible(false);
       setInfoMessage(''); // Clear any previous messages
 
@@ -124,6 +149,10 @@ const handleRegister = async () => {
         setLoggedIn(false);
         setUsername('');
         onLogin(false, '', ''); // Notify parent about logout
+
+                // Remove the token and username from AsyncStorage
+                await AsyncStorage.removeItem('accessToken');
+                await AsyncStorage.removeItem('username');
         console.log('Logged out successfully');
       } else {
         alert('Logout failed');
