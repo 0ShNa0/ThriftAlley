@@ -47,7 +47,7 @@ const addProduct = asyncHandler(async (req, res) => {
   console.log("user is", user.fullName);
   try {
     await newProduct.save();
-    user.listedClothes.push(newProduct._id);
+   
     await user.save({ validateBeforeSave: false });
     console.log("Product saved:", newProduct);
     res
