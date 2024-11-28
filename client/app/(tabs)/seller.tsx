@@ -208,7 +208,7 @@ const SellerWindow = () => {
         );
 
         if (!response.ok) {
-          throw new Error('Failed to fetch products');
+          throw new Error('There are no active products here your store right now');
         }
 
         const data = await response.json();
