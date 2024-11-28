@@ -5,10 +5,8 @@ import {
   StyleSheet,
   ActivityIndicator,
   TextInput,
-  TouchableOpacity,
 } from 'react-native';
 import HomeScreenDisplay from '../homescreen';
-import UserBar from '../user';
 
 interface Product {
   _id: string;
@@ -25,15 +23,7 @@ const HomeWindow = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [username, setUsername] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Callback to handle login
-  const handleLogin = (loggedIn: boolean, name: string) => {
-    setIsLoggedIn(loggedIn);
-    setUsername(name);
-  };
 
   useEffect(() => {
     const fetchSellerProducts = async () => {
@@ -69,7 +59,6 @@ const HomeWindow = () => {
     fetchSellerProducts();
   }, []); // No need for accessToken, fetch products on component mount
 
-  // Handle search functionality
   const handleSearch = (query: string) => {
     setSearchQuery(query);
   };
@@ -80,27 +69,31 @@ const HomeWindow = () => {
 
   return (
     <View style={styles.container}>
-      <UserBar onLogin={handleLogin} />
       <View style={styles.headerContainer}>
+        <View style={styles.headerTextContainer}>
+          <Text style={styles.header}>Thrift Alley</Text>
+          <Text style={styles.subHeader}>Where style meets savings</Text>
+        </View>
         <TextInput
           style={styles.searchBar}
           placeholder="Search products..."
           value={searchQuery}
           onChangeText={handleSearch}
         />
-        <View style={styles.headerWrapper}>
-          <Text style={styles.header}>Thrift Alley</Text>
-          <Text style={styles.subHeader}>Where style meets savings</Text>
-        </View>
       </View>
-
       {loading ? (
-        <ActivityIndicator size="large" color="#4CAF50" />
-      ) : error ? (
-        <Text style={styles.error}>{error}</Text>
-      ) : (
-        <HomeScreenDisplay products={filteredProducts} />
-      )}
+  <ActivityIndicator size="large" color="#4CAF50" />
+) : error ? (
+  <Text style={styles.error}>{error}</Text>
+) : filteredProducts.length === 0 ? (
+  <View style={styles.emptyStateContainer}>
+    <Text style={styles.emptyStateText}>
+      No products match your search query. Try searching for something else!
+    </Text>
+  </View>
+) : (
+  <HomeScreenDisplay products={filteredProducts} />
+)}
     </View>
   );
 };
@@ -112,26 +105,32 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   headerContainer: {
-    marginBottom: 40,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: 'row', // Align items in a row
+    justifyContent: 'space-between', // Ensure space between left (text) and right (search bar)
+    alignItems: 'center', // Vertically align items
+    marginBottom: 20, // Add space below the header
+    marginLeft : 30
+  },
+  headerTextContainer: {
+    flexDirection: 'column', // Stack texts vertically
+    justifyContent: 'center', // Center the text vertically
   },
   searchBar: {
-    height: 40,
-    borderColor: '#ddd',
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    flex: 1,
-  },
-  headerWrapper: {
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    marginLeft: 20,
+    height: 42, // Increase height for better touch target
+    borderColor: '#4CAF50', // Green border to make it stand out
+    borderWidth: 2, // Slightly thicker border
+    borderRadius: 25, // Rounded corners for a smoother look
+    paddingHorizontal: 15, // More space inside the input
+    width: '28%', // Increase width of the search bar
+    backgroundColor: '#ffffff', // White background
+    shadowColor: '#000000', // Shadow for depth
+    shadowOffset: { width: 0, height: 2 }, // Shadow offset
+    shadowOpacity: 0.3, // Slight opacity for shadow
+    shadowRadius: 5, // Softer shadow radius
+    marginRight: 61,
   },
   header: {
-    fontSize: 36,
+    fontSize: 47,
     fontWeight: 'bold',
     color: '#4CAF50',
     textShadowColor: '#bbb',
@@ -139,39 +138,29 @@ const styles = StyleSheet.create({
     textShadowRadius: 6,
   },
   subHeader: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: '300',
     color: '#757575',
     marginTop: 5,
-  },
-  infoContainer: {
-    marginTop: 20,
-    textAlign: 'center',
-  },
-  info: {
-    fontSize: 18,
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  loginButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 12,
-    paddingHorizontal: 40,
-    borderRadius: 30,
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  loginButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   error: {
     color: '#B00020',
     textAlign: 'center',
     fontSize: 16,
   },
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    color: '#757575',
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
+  
 });
 
 export default HomeWindow;
