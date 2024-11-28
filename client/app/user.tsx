@@ -8,7 +8,6 @@ import {
   Button,
   StyleSheet,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 interface UserBarProps {
   onLogin: (loggedIn: boolean, name: string, accessToken: string) => void;
 }
@@ -58,6 +57,7 @@ const handleLogin = async () => {
       onLogin(true, result.data.name, result.data.accessToken);
       setModalVisible(false);
       setInfoMessage(''); // Clear any previous messages
+
     } else if (response.status === 401) {
       setErrors({ ...errors, password: 'Invalid password' });
       setInfoMessage('Invalid password. Please try again.');
@@ -74,31 +74,34 @@ const handleLogin = async () => {
 };
 
 
-  const handleRegister = async () => {
-    try {
-      const response = await fetch('http://localhost:8000/api/v1/users/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          fullName: formData.fullName,
-        }),
-      });
-      if (response.ok) {
-        setInfoMessage('Registration successful! Please log in.');
-        setTimeout(() => setIsLogin(true), 2000);
-      } else if (response.status === 409) {
-        setInfoMessage('User already registered! Please log in.');
-        setTimeout(() => setIsLogin(true), 2000);
-      } else {
-        setInfoMessage('Registration failed. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error registering:', error);
-      setInfoMessage('An error occurred during registration.');
+const handleRegister = async () => {
+  try {
+    const response = await fetch('http://localhost:8000/api/v1/users/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: formData.email,
+        password: formData.password,
+        fullName: formData.fullName,
+      }),
+    });
+    if (response.ok) {
+      setInfoMessage('Registration successful! Please log in.');
+        setIsLogin(true);
+
+    } else if (response.status === 409) {
+      setInfoMessage('User already registered! Please log in.');
+
+        setIsLogin(true);
+
+    } else {
+      setInfoMessage('Registration failed. Please try again.');
     }
-  };
+  } catch (error) {
+    console.error('Error registering:', error);
+    setInfoMessage('An error occurred during registration.');
+  }
+};
   
   const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData({ ...formData, [field]: value });
@@ -329,10 +332,11 @@ const styles = StyleSheet.create({
     fontSize: 16, // Slightly larger font size
   },
   errorText: {
-    color: 'red',
-    fontSize: 12,
-    marginTop: -8,
-    marginBottom: 10,
+    color: '#ff4a5f',
+    fontSize: 15,
+    marginTop: -6,
+    marginBottom: 11,
+    fontWeight: 'bold',
   },
   
 });
