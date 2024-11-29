@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Product = {
   _id: string;
@@ -21,6 +23,26 @@ const HomeScreenDisplay = ({ products }: Props) => {
   const [imageIndices, setImageIndices] = useState<{ [key: string]: number }>({});
   const [numColumns] = useState(3); // Set the number of columns once
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [accessToken, setAccessToken] = useState('');
+  const [cart, setCart] = useState<any | null>(null);
+
+  // Fetch the access token when the component mounts
+  useEffect(() => {
+    const getAccessToken = async () => {
+      const token = await AsyncStorage.getItem('accessToken');
+      console.log('Retrieved Token:', token);
+      if (token) {
+        setAccessToken(token);
+      } else {
+        // If token is not found, handle accordingly (e.g., redirect to login)
+        console.log('No access token found');
+      }
+    };
+
+    getAccessToken();
+  }, []);
+
   // Function to handle next image click
   const goToNextImage = (productId: string, currentIndex: number, imagesLength: number) => {
     if (currentIndex < imagesLength - 1) {
@@ -40,6 +62,85 @@ const HomeScreenDisplay = ({ products }: Props) => {
       });
     }
   };
+
+  const fetchCart = async () => {
+    try {
+      const response = await axios.get(
+        'http://localhost:8000/api/v1/cart/fetchCart', 
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      setCart(response.data.cart);  // Update the local cart state
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+    }
+  };
+  
+  const addToCart = async (productId: string, quantity: number) => {
+    if (!accessToken) {
+      console.log('No access token available');
+      return;
+    }
+  
+    setIsLoading(true);
+  
+    try {
+      const response = await axios.patch(
+        `http://localhost:8000/api/v1/cart/addToCart/${productId}`,
+        { quantity },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      alert(response.data.message);
+      fetchCart(); // Fetch the updated cart after adding the item
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert('Failed to add item to cart');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // const updateCart = (cart: any) => {
+  //   setCart(cart.products);
+  // };
+
+  // const addToCart = async (productId: string, quantity: number) => {
+  //   if (!accessToken) {
+  //     console.log('No access token available');
+  //     return;
+  //   }
+
+  //   setIsLoading(true);
+
+  //   try {
+  //     const response = await axios.patch(
+  //       `http://localhost:8000/api/v1/cart/addToCart/${productId}`,
+  //       { quantity },
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${accessToken}`, // Send the access token in the header
+  //         },
+  //       }
+  //     );
+  //     console.log(response.data);
+  //     alert(response.data.message);
+  //     updateCart(response.data.data);
+  //   } catch (error) {
+  //     console.error('Error adding to cart:', error);
+  //     alert('Failed to add item to cart');
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+
 
   // Render each product
   const renderProduct = ({ item }: { item: Product }) => {
@@ -71,8 +172,13 @@ const HomeScreenDisplay = ({ products }: Props) => {
         <Text style={styles.productPrice}>₹{item.price}</Text>
         <Text style={styles.productQuantity}>Quantity: {item.quantity}</Text>
         <TouchableOpacity
-          style={styles.addToCartButton}>
-          <Text style={styles.addToCartButtonText}>Add to Cart</Text>
+          style={[styles.addToCartButton, isLoading && { backgroundColor: '#aaa' }]} // Change button style when loading
+          onPress={() => addToCart(item._id, 1)} // Pass the product ID and quantity
+          disabled={isLoading} // Disable the button when loading
+        >
+          <Text style={styles.addToCartButtonText}>
+            {isLoading ? 'Adding...' : 'Add to Cart'}
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -94,6 +200,21 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 10,
     paddingBottom: 20,
+  },
+  addToCartButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 6, // Slightly smaller padding for the button
+    paddingHorizontal: 16, // Adjusted width
+    borderRadius: 20, // More rounded corners for the button
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    alignSelf: 'center', // Center the button horizontally
+    marginBottom: 15, // Add space from the bottom
+  },
+  addToCartButtonText: {
+    color: '#fff',
+    fontSize: 16,
   },
   productCard: {
     backgroundColor: '#fff',
@@ -161,22 +282,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 10,
   },
-  addToCartButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 6, // Slightly smaller padding for the button
-    paddingHorizontal: 16, // Adjusted width
-    borderRadius: 20, // More rounded corners for the button
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-    alignSelf: 'center', // Center the button horizontally
-    marginBottom: 15, // Add space from the bottom
-  },
-  addToCartButtonText: {
-    color: '#fff',
-    fontSize: 16, // Keep the same text size
-    fontWeight: 'bold',
-  },
+
+
 });
 
 
