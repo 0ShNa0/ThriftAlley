@@ -83,11 +83,10 @@ const SellerProductsDisplay = ({ products, setProducts, accessToken }: Props) =>
     }
   };
 
-  // Function to call API for decrementing product quantity
   const decrementQuantity = async (productId: string, currentQuantity: number) => {
     console.log('decrement - ' + currentQuantity);
     if (currentQuantity <= 0) return; // Prevent decrementing below 0
-
+  
     try {
       const response = await fetch(
         `http://localhost:8000/api/v1/products/decrementProduct/${productId}`,
@@ -105,19 +104,23 @@ const SellerProductsDisplay = ({ products, setProducts, accessToken }: Props) =>
       if (!response.ok) {
         throw new Error('Failed to decrement quantity');
       }
-
-      // Update the frontend state after the API call
-      setProducts((prevProducts) =>
-        prevProducts.map((product) =>
-          product._id === productId
-            ? { ...product, quantity: product.quantity - 1 }
-            : product
-        )
-      );
+  
+      // After successful API call, check if the quantity is now zero
+      setProducts((prevProducts) => {
+        // Remove the product if its quantity becomes zero after decrement
+        return prevProducts
+          .map((product) =>
+            product._id === productId
+              ? { ...product, quantity: product.quantity - 1 }
+              : product
+          )
+          .filter((product) => product.quantity > 0); // Filter out products with quantity 0
+      });
     } catch (error) {
       console.error('Error decrementing quantity:', error);
     }
   };
+  
 
   // Render each product
   const renderProduct = ({ item }: { item: Product }) => {
