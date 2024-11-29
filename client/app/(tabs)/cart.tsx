@@ -2,24 +2,39 @@ import React, { useState, useEffect } from "react";
 import { FlatList, Text, View, TouchableOpacity, ActivityIndicator, Alert, Image, StyleSheet, ScrollView, TextInput } from "react-native";
 import axios from "axios";
 import { Ionicons } from "@expo/vector-icons";
+import UserBar from '../user';
 
 const CartScreen: React.FC = () => {
   const [cart, setCart] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [isAddButtonDisabled, setIsAddButtonDisabled] = useState(false);
-
+  const [loading, setLoading] = useState(true); // Default to false to avoid spinner at start
+  const [error, setError] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState('');
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   // Hardcoded tokens for testing
   const hardcodedAccessToken =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NzQ3NGJjOTA4ZTlmOGM5ODdhNTQ5ZWMiLCJpYXQiOjE3MzI4MTkwNzYsImV4cCI6MTczMjkwNTQ3Nn0._XD7ij00YUQQCImqfeKpgAgnLAH6TJlcrKfuINrjy3I";
 
+    const handleLogin = (loggedIn: boolean, name: string, token: string) => {
+      console.log('in handlelogic');
+      setIsLoggedIn(loggedIn);
+      setUsername(name);
+      setAccessToken(token);
+      console.log('access token - '+ token);
+    };
   const fetchCart = async () => {
+    if (!accessToken){
+      console.log('no access token');
+      return;
+    }
     try {
       const response = await axios.get("http://localhost:8000/api/v1/cart/fetchCart", {
-        headers: { Authorization: `Bearer ${hardcodedAccessToken}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
-      setCart(response.data.data || response.data);
+      setCart(response?.data?.data || response?.data);
     } catch (err: any) {
       Alert.alert("Error", `Failed to fetch cart data: ${err.message || err}`);
     } finally {
@@ -28,8 +43,9 @@ const CartScreen: React.FC = () => {
   };
 
   useEffect(() => {
+      if(accessToken)
     fetchCart();
-  }, []);
+  }, [accessToken]);
 
 
 
@@ -37,9 +53,9 @@ const CartScreen: React.FC = () => {
     const quantityUpdate = action === "increase" ? 1 : -1;
 
     // Clone the cart products and modify the quantity locally
-    const updatedProducts = cart!.products.map((item: any) => {
-      if (item.product._id === productId) {
-        const newQuantity = item.quantity + quantityUpdate;
+    const updatedProducts = cart?.products?.map((item: any) => {
+      if (item?.product?._id === productId) {
+        const newQuantity = item?.quantity + quantityUpdate;
 
         if (newQuantity >= 1) {
           return { ...item, quantity: newQuantity };
@@ -52,8 +68,8 @@ const CartScreen: React.FC = () => {
     }).filter((item: null) => item !== null); // Remove any `null` values (items with quantity 0)
 
     // Recalculate the total amount after updating the quantity
-    const updatedTotalAmount = updatedProducts.reduce(
-      (sum: number, item: any) => sum + item.product.price * item.quantity,
+    const updatedTotalAmount = updatedProducts?.reduce(
+      (sum: number, item: any) => sum + item?.product?.price * item?.quantity,
       0
     );
 
@@ -66,14 +82,14 @@ const CartScreen: React.FC = () => {
         await axios.patch(
           `http://localhost:8000/api/v1/cart/addToCart/${productId}`,
           { quantity: quantityUpdate },
-          { headers: { Authorization: `Bearer ${hardcodedAccessToken}` } }
+          { headers: { Authorization: `Bearer ${accessToken}` } }
         );
       } else {
         // Call the removeFromCart API to remove the product when quantity reaches 0
         await axios.patch(
           `http://localhost:8000/api/v1/cart/removeFromCart/${productId}`,
           { quantity: Math.abs(quantityUpdate) },
-          { headers: { Authorization: `Bearer ${hardcodedAccessToken}` } }
+          { headers: { Authorization: `Bearer ${accessToken}` } }
         );
       }
     } catch (err) {
@@ -82,7 +98,7 @@ const CartScreen: React.FC = () => {
   };
 
   const handleRemoveFromCart = (productId: string) => {
-    const updatedProducts = cart.products.filter((item: { product: { _id: string; }; }) => item.product._id !== productId);
+    const updatedProducts = cart?.products?.filter((item: { product: { _id: string; }; }) => item?.product?._id !== productId);
 
     setCart((prevCart: any) => {
       if (updatedProducts.length === 0) {
@@ -90,7 +106,7 @@ const CartScreen: React.FC = () => {
       }
 
       const updatedTotal = updatedProducts.reduce(
-        (sum: number, item: { product: { price: number; quantity: number; }; }) => sum + item.product.price * item.product.quantity,
+        (sum: number, item: { product: { price: number; quantity: number; }; }) => sum + item?.product?.price * item?.product?.quantity,
         0
       );
       return { ...prevCart, products: updatedProducts, totalAmount: updatedTotal };
@@ -107,7 +123,7 @@ const CartScreen: React.FC = () => {
     }
   };
 
-  if (loading) {
+ /* if (loading) {
     return (
       <View style={styles.loadingCartContainer}>
         <ActivityIndicator size="large" color="#0000ff" />
@@ -115,16 +131,24 @@ const CartScreen: React.FC = () => {
       </View>
     );
   }
+    */
 
-  if (!cart || !cart.products || cart.products.length === 0) {
+  if (!cart || !cart?.products || cart?.products?.length === 0) {
     return (
+     
       <View style={styles.emptyCartContainer}>
+         <UserBar onLogin={handleLogin} />
         <Text>Your cart is empty!</Text>
       </View>
     );
   }
 
   return (
+    <div>
+    <UserBar onLogin={handleLogin} />
+    {!isLoggedIn ? (
+        <Text style={styles.info}>Please log in to view your products.</Text>
+      )  : (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Top Bar */}
       <View style={styles.topBar}>
@@ -150,7 +174,7 @@ const CartScreen: React.FC = () => {
 
           <FlatList
             data={cart.products}
-            keyExtractor={(item) => item.product._id}
+            keyExtractor={(item) => item?.product?._id}
             ListHeaderComponent={
               <>
                 <View style={styles.headerRow}>
@@ -168,26 +192,26 @@ const CartScreen: React.FC = () => {
                   {/* Product Details */}
                   <View style={styles.productDetailsContainer}>
                     <View style={styles.imageContainer}>
-                      <Image source={{ uri: item.product.images[0] }} style={styles.productImage} />
+                      <Image source={{ uri: item?.product?.images[0] }} style={styles.productImage} />
 
                     </View>
                     <View>
-                      <Text style={styles.productName}>{item.product.name}</Text>
-                      <Text style={styles.productInfo}>{item.product.colour}</Text>
-                      <Text style={styles.productInfo}>Size:{item.product.size}</Text>
+                      <Text style={styles.productName}>{item?.product?.name}</Text>
+                      <Text style={styles.productInfo}>{item?.product?.colour}</Text>
+                      <Text style={styles.productInfo}>Size:{item?.product?.size}</Text>
                     </View>
                   </View>
 
                   {/* Price */}
                   <Text style={[styles.detailText, { flex: 1 }]}>
-                    ${item.product.price.toFixed(2)}
+                    ${item?.product?.price.toFixed(2)}
                   </Text>
 
                   {/* Quantity Controls */}
                   <View style={[styles.quantityControls, { flex: 1 }]}>
                     <TouchableOpacity
-                      onPress={() => handleUpdateQuantity(item.product._id, "decrease")}
-                      disabled={item.quantity === 1}
+                      onPress={() => handleUpdateQuantity(item?.product?._id, "decrease")}
+                      disabled={item?.quantity === 1}
                     >
                       <Ionicons
                         name="remove-circle-outline"
@@ -195,10 +219,10 @@ const CartScreen: React.FC = () => {
                         color="#333"
                       />
                     </TouchableOpacity>
-                    <Text style={styles.quantity}>{item.quantity}</Text>
+                    <Text style={styles.quantity}>{item?.quantity}</Text>
                     <TouchableOpacity
-                      onPress={() => handleUpdateQuantity(item.product._id, "increase")}
-                      disabled={item.product.quantity === item.quantity}
+                      onPress={() => handleUpdateQuantity(item?.product?._id, "increase")}
+                      disabled={item?.product?.quantity === item?.quantity}
                     >
                       <Ionicons name="add-circle-outline" size={20} color="#333" />
                     </TouchableOpacity>
@@ -206,10 +230,10 @@ const CartScreen: React.FC = () => {
 
                   {/* Total Price */}
                   <Text style={[styles.detailText, { flex: 1 }]}>
-                    ${(item.product.price * item.quantity).toFixed(2)}
+                    ${(item?.product?.price * item?.quantity).toFixed(2)}
                   </Text>
 
-                  <TouchableOpacity onPress={() => handleRemoveFromCart(item.product._id)}>
+                  <TouchableOpacity onPress={() => handleRemoveFromCart(item?.product?._id)}>
                     <Ionicons name="trash-outline" size={20} color="red" />
                   </TouchableOpacity>
                 </View>
@@ -239,15 +263,19 @@ const CartScreen: React.FC = () => {
 
 
           <Text style={styles.totalText}>Discount: {discount}%</Text>
-          <Text style={styles.totalText}>Total: ${cart.totalAmount}</Text>
+          <Text style={styles.totalText}>Total: ${cart?.totalAmount}</Text>
 
 
           <TouchableOpacity style={styles.checkoutButton} onPress={() => alert("Proceeding to checkout")}>
             <Text style={styles.buttonText}>Proceed to Checkout</Text>
           </TouchableOpacity>
+          
         </View>
+        
       </View>
-    </ScrollView>
+    </ScrollView>)
+ } </div>
+    
   );
 };
 
@@ -373,6 +401,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f9f9f9',
+  }, info: {
+    fontSize: 16,
+    color: '#333',
+    textAlign: 'center',
+    marginTop: 20,
   },
 
 
