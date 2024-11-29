@@ -1,3 +1,5 @@
+// SellerProductsDisplay.tsx
+
 import React, { useState } from 'react';
 import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -15,11 +17,13 @@ type Product = {
 
 type Props = {
   products: Product[];
+  setProducts: React.Dispatch<React.SetStateAction<Product[]>>; // New prop to update products
+  accessToken: string; // Add accessToken prop for API authentication
 };
 
-const SellerProductsDisplay = ({ products }: Props) => {
+const SellerProductsDisplay = ({ products, setProducts, accessToken }: Props) => {
   const [imageIndices, setImageIndices] = useState<{ [key: string]: number }>({});
-  const [numColumns] = useState(3); // Set the number of columns once
+  const [numColumns] = useState(3);
 
   // Function to handle next image click
   const goToNextImage = (productId: string, currentIndex: number, imagesLength: number) => {
@@ -38,6 +42,80 @@ const SellerProductsDisplay = ({ products }: Props) => {
         ...imageIndices,
         [productId]: currentIndex - 1,
       });
+    }
+  };
+
+  // Function to call API for incrementing product quantity
+  const incrementQuantity = async (productId: string, currentQuantity: number) => {
+    console.log('increment curr quantity - ' + currentQuantity);
+    console.log("json body below");
+    console.log(JSON.stringify({
+      quantity: currentQuantity + 1, // Increment quantity by 1
+    }));
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/v1/products/incrementProduct/${productId}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`, // Add Authorization header
+          },
+          body: JSON.stringify({
+            quantity: 1, // Increment quantity by 1
+          }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error('Failed to increment quantity');
+      }
+
+      // Update the frontend state after the API call
+      setProducts((prevProducts) =>
+        prevProducts.map((product) =>
+          product._id === productId
+            ? { ...product, quantity: product.quantity + 1 }
+            : product
+        )
+      );
+    } catch (error) {
+      console.error('Error incrementing quantity:', error);
+    }
+  };
+
+  // Function to call API for decrementing product quantity
+  const decrementQuantity = async (productId: string, currentQuantity: number) => {
+    console.log('decrement - ' + currentQuantity);
+    if (currentQuantity <= 0) return; // Prevent decrementing below 0
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/v1/products/decrementProduct/${productId}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`, // Add Authorization header
+          },
+          body: JSON.stringify({
+            quantity: 1, // Decrement quantity by 1
+          }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error('Failed to decrement quantity');
+      }
+
+      // Update the frontend state after the API call
+      setProducts((prevProducts) =>
+        prevProducts.map((product) =>
+          product._id === productId
+            ? { ...product, quantity: product.quantity - 1 }
+            : product
+        )
+      );
+    } catch (error) {
+      console.error('Error decrementing quantity:', error);
     }
   };
 
@@ -69,7 +147,21 @@ const SellerProductsDisplay = ({ products }: Props) => {
           {item.garmentType} | {item.size} | {item.colour}
         </Text>
         <Text style={styles.productPrice}>₹{item.price}</Text>
-        <Text style={styles.productQuantity}>Quantity: {item.quantity}</Text>
+
+        {/* Quantity Display and Controls */}
+        <View style={styles.quantityContainer}>
+          <TouchableOpacity
+            style={styles.quantityButton}
+            onPress={() => decrementQuantity(item._id, item.quantity)}>
+            <MaterialIcons name="remove" size={20} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.quantityText}>{item.quantity}</Text>
+          <TouchableOpacity
+            style={styles.quantityButton}
+            onPress={() => incrementQuantity(item._id, item.quantity)}>
+            <MaterialIcons name="add" size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </View>
     );
   };
@@ -102,25 +194,25 @@ const styles = StyleSheet.create({
     elevation: 3,
     width: '30%',
     margin: '1.5%',
-    height: 400, // Adjust card height for larger images
+    height: 450, // Adjusted card height for larger images and quantity controls
   },
   imageContainer: {
-    flex: 1, // Ensure the image container takes available space
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
   },
   productImage: {
-    width: '90%', // Take most of the container's width
-    height: '80%', // Occupy a large portion of the card height
+    width: '90%',
+    height: '80%',
     borderRadius: 8,
-    resizeMode: 'contain', // Ensure the entire image is visible
+    resizeMode: 'contain',
   },
   arrowButton: {
     position: 'absolute',
     top: '50%',
     zIndex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)', // Semi-transparent black
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     padding: 10,
     borderRadius: 50,
   },
@@ -151,13 +243,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 5,
   },
-  productQuantity: {
-    fontSize: 14,
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 10,
+  quantityContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  quantityButton: {
+    backgroundColor: '#4CAF50',
+    padding: 8,
+    borderRadius: 5,
+    marginHorizontal: 10,
+  },
+  quantityText: {
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
-
 
 export default SellerProductsDisplay;
