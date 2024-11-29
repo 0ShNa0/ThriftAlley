@@ -13,7 +13,8 @@ const productRouter = Router();
 
 productRouter
   .route("/addForSelling")
-  .post(verifyJWT,upload.array("images", 3),addProduct);
+  .post(verifyJWT,upload.array("images", 2),addProduct);
+
 productRouter.route("/getSellerProducts").get(verifyJWT, getSellerProducts);
 productRouter.route("/searchProducts").get(searchProducts);
 productRouter

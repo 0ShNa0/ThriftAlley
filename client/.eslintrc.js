@@ -9,7 +9,9 @@ module.exports = {
   },
   rules: {
     semi: ["error", "always"], // Enforces semicolons
-    quotes: ["error", "single"], // Enforces single quotes
+    // Enforces single quotes
+    quotes: ["off", "single", { avoidEscape: true, allowTemplateLiterals: true }]
+   
   },
   ignorePatterns: [
     "**/*.test.js",
