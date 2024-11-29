@@ -96,7 +96,7 @@ const SellerWindow = () => {
   accessToken={accessToken || ''} // Pass accessToken as a prop (ensure it's not null or undefined)
 />
       )}
-      <AddSellerButton/>
+      <AddSellerButton accessToken={accessToken as string}/>
     </View>
   );
 };
