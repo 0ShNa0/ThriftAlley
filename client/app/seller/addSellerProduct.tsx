@@ -150,6 +150,7 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
               >
                 <Picker.Item label="Select Garment Type" value="" />
                 <Picker.Item label="Anarkali" value="anarkali" />
+                <Picker.Item label="Blazer" value="blazer" />
                 <Picker.Item label="Dress" value="dress" />
                 <Picker.Item label="Jacket" value="jacket" />
                 <Picker.Item label="Jeans" value="jeans" />
@@ -252,7 +253,6 @@ const styles = StyleSheet.create({
   container: { 
     flex: 1,
     padding: 20,
-    backgroundColor: 'transparent',
    },
   addButton: {
     backgroundColor: '#4CAF50',
@@ -267,7 +267,8 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   modalContent: {
     backgroundColor: 'white',
