@@ -25,10 +25,9 @@ type NewItem = {
 
 interface AddSellerButtonProps {
   accessToken: string;
-  refetchProducts: () => void;  // Add the refetch function as a prop
 }
 
-const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken, refetchProducts }) => {
+const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [newItem, setNewItem] = useState<NewItem>({
     title: "",
@@ -107,9 +106,7 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken, refetchP
         quantity: "1",
         images: [],
       });
-
-      // After successfully adding the item, refetch the product list
-      refetchProducts();
+    
     } catch (error) {
       console.error("Error submitting data:", error);
     } finally {
@@ -252,19 +249,25 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken, refetchP
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
+  container: { 
+    flex: 1,
+    padding: 20,
+    backgroundColor: 'transparent',
+   },
   addButton: {
     backgroundColor: '#4CAF50',
     padding: 10,
     borderRadius: 5,
     alignItems: 'center',
+    width: 150, // Set a smaller width for the Add Item button
+    alignSelf: 'center',
+    marginBottom: 20,
   },
   addButtonText: { color: 'white', fontSize: 16 },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    alignItems: 'center'
   },
   modalContent: {
     backgroundColor: 'white',
