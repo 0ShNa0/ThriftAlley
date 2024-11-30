@@ -36,7 +36,7 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken, refetchP
     garmentType: "",
     colour: "",
     size: "",
-    quantity: "1",
+    quantity: "",
     images: [],
   });
   const [loading, setLoading] = useState(false);
@@ -152,12 +152,16 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken, refetchP
                 onValueChange={(value) => handleInputChange("garmentType", value)}
               >
                 <Picker.Item label="Select Garment Type" value="" />
+                <Picker.Item label="Anarkali" value="anarkali" />
                 <Picker.Item label="Dress" value="dress" />
+                <Picker.Item label="Jacket" value="jacket" />
                 <Picker.Item label="Jeans" value="jeans" />
                 <Picker.Item label="Kurta" value="kurta" />
                 <Picker.Item label="Leggings" value="leggings" />
+                <Picker.Item label="Lehenga" value="lehenga" />
                 <Picker.Item label="Pants" value="pants" />
                 <Picker.Item label="Pyjama" value="pyjama" />
+                <Picker.Item label="Saree" value="saree" />
                 <Picker.Item label="Shirt" value="shirt" />
                 <Picker.Item label="Shorts" value="shorts" />
                 <Picker.Item label="Top" value="top" />
@@ -173,10 +177,13 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken, refetchP
                 <Picker.Item label="Black" value="black" />
                 <Picker.Item label="Brown" value="brown" />
                 <Picker.Item label="Blue" value="blue" />
+                <Picker.Item label="Golden" value="golden" />
                 <Picker.Item label="Green" value="green" />
+                <Picker.Item label="Lilac" value="lilac" />
                 <Picker.Item label="Pink" value="pink" />
                 <Picker.Item label="Purple" value="purple" />
                 <Picker.Item label="Red" value="red" />
+                <Picker.Item label="Silver" value="silver" />
                 <Picker.Item label="White" value="white" />
                 <Picker.Item label="Yellow" value="yellow" />
               </Picker>
@@ -204,7 +211,7 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken, refetchP
               </TouchableOpacity>
               {newItem.images.length > 0 && (
                 <View style={styles.imagePreviewContainer}>
-                  <Text>Selected Images:</Text>
+                  <Text style={styles.selectedImagesText}>Selected Images:</Text>
                   <ScrollView horizontal>
                     {newItem.images.map((uri, index) => (
                       <View key={index} style={styles.imageWrapper}>
@@ -226,14 +233,14 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken, refetchP
                 </View>
               )}
               <View style={styles.buttonRow}>
+              <TouchableOpacity style={styles.saveButton} onPress={submitData}>
+                  <Text style={styles.saveButtonText}>{loading ? "Saving..." : "Save"}</Text>
+                </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.cancelButton}
                   onPress={() => setModalVisible(false)}
                 >
                   <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.saveButton} onPress={submitData}>
-                  <Text style={styles.saveButtonText}>{loading ? "Saving..." : "Save"}</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -263,7 +270,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     padding: 25,
     borderRadius: 10,
-    width: '85%',
+    width: '62%',
     maxHeight: '90%',
   },
   modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 15 },
@@ -276,14 +283,21 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderRadius: 5,
     width: '100%',
+    height:41,
+    borderWidth: 1, // Ensure there's always a border
+  borderColor: '#f0f0f0', // Match the background color or set a neutral color
   },
-  picker: { width: '100%', marginBottom: 12 },
+  picker: { 
+    width: '100%',
+    marginBottom: 12,
+    height:41,
+   },
   uploadButton: {
     backgroundColor: '#2196F3',
     padding: 10,
     borderRadius: 5,
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 4,
   },
   uploadButtonText: { color: 'white' },
   buttonRow: { flexDirection: 'row', justifyContent: 'space-between' },
@@ -291,12 +305,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF5722',
     padding: 10,
     borderRadius: 5,
+    marginTop: 5,
   },
-  cancelButtonText: { color: 'white' },
+  cancelButtonText: { 
+    color: 'white',
+   },
   saveButton: {
     backgroundColor: '#4CAF50',
     padding: 10,
     borderRadius: 5,
+    marginTop:5,
   },
   saveButtonText: { color: 'white' },
   imagePreviewContainer: {
@@ -310,7 +328,7 @@ const styles = StyleSheet.create({
   },
   imageWrapper: {
     position: 'relative',
-    marginRight: 10,
+    marginRight: 13,
   },
   removeImageButton: {
     position: 'absolute',
@@ -328,6 +346,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     lineHeight: 20,
+  },
+  selectedImagesText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 15, // Add spacing below the text
   },
   
   
