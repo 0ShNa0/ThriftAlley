@@ -234,7 +234,7 @@ const CartScreen: React.FC = () => {
 
                   {/* Price */}
                   <Text style={[styles.detailText, { flex: 1 }]}>
-                    ${item.product.price.toFixed(2)}
+                    Rs. {item.product.price.toFixed(2)}
                   </Text>
 
                   {/* Quantity Controls */}
@@ -264,7 +264,7 @@ const CartScreen: React.FC = () => {
 
                   
                   <Text style={[styles.detailText, { flex: 1 }]}>
-                    ${(item.product.price * item.quantity).toFixed(2)}
+                    Rs. {(item.product.price * item.quantity).toFixed(2)}
                   </Text>
 
                   <TouchableOpacity onPress={() => handleRemoveFromCart(item.product._id)}>
