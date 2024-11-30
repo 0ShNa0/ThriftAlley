@@ -43,6 +43,12 @@ const HomeScreenDisplay = ({ products }: Props) => {
     getAccessToken();
   }, []);
 
+  useEffect(() => {
+    if (accessToken) {
+      fetchCart();
+    }
+  }, [accessToken]);
+
   // Function to handle next image click
   const goToNextImage = (productId: string, currentIndex: number, imagesLength: number) => {
     if (currentIndex < imagesLength - 1) {
@@ -78,6 +84,7 @@ const HomeScreenDisplay = ({ products }: Props) => {
       console.error('Error fetching cart:', error);
     }
   };
+ 
   
   const addToCart = async (productId: string, quantity: number) => {
     if (!accessToken) {

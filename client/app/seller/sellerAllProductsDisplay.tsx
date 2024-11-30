@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 5, // Reduced margin to tighten the gap
   },
   productImage: {
     width: '90%',
@@ -236,7 +236,8 @@ const styles = StyleSheet.create({
   productDetails: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 5,
+    marginTop: 2, // Reduced marginTop to tighten the gap
+    marginBottom: 5, // Optional: fine-tune bottom margin as well
     textAlign: 'center',
   },
   productPrice: {
@@ -255,13 +256,17 @@ const styles = StyleSheet.create({
   quantityButton: {
     backgroundColor: '#4CAF50',
     padding: 8,
-    borderRadius: 5,
+    borderRadius: 7,
     marginHorizontal: 10,
+    marginBottom: 25
   },
   quantityText: {
     fontSize: 18,
     fontWeight: 'bold',
+    marginHorizontal: 10,
+    marginBottom : 25,
   },
 });
+
 
 export default SellerProductsDisplay;

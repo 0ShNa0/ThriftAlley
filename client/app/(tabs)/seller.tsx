@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import SellerProductsDisplay from '../seller/sellerAllProductsDisplay';
+import AddSellerButton from '../seller/addSellerProduct';
 
 type Product = {
   _id: string;
@@ -95,6 +96,7 @@ const SellerWindow = () => {
   accessToken={accessToken || ''} // Pass accessToken as a prop (ensure it's not null or undefined)
 />
       )}
+      <AddSellerButton accessToken={accessToken as string}/>
     </View>
   );
 };
