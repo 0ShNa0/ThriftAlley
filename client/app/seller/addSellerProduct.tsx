@@ -28,6 +28,7 @@ interface AddSellerButtonProps {
 }
 
 const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [modalVisible, setModalVisible] = useState(false);
   const [newItem, setNewItem] = useState<NewItem>({
     title: "",
@@ -40,12 +41,38 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
   });
   const [loading, setLoading] = useState(false);
 
+  const validateInputs = () => {
+    const newErrors: Record<string, string> = {};
+  
+    if (!newItem.title) newErrors.title = "Title is required.";
+    if (!newItem.price) newErrors.price = "Price is required.";
+    if (!newItem.garmentType) newErrors.garmentType = "Garment type is required.";
+    if (!newItem.colour) newErrors.colour = "Colour is required.";
+    if (!newItem.size) newErrors.size = "Size is required.";
+    if (!newItem.quantity) newErrors.quantity = "Quantity is required.";
+    if (newItem.images.length === 0) newErrors.images = "At least one image is required.";
+    if (newItem.images.length > 3) newErrors.images = "Maximum 3 images allowed.";
+  
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0; // Return true if no errors
+  };
+  
+  
+
   const handleInputChange = (field: keyof NewItem, value: string) => {
     setNewItem((prev) => ({
       ...prev,
       [field]: value,
     }));
+    
+    // Clear the error for the specific field
+    setErrors((prev) => {
+      const updatedErrors = { ...prev };
+      delete updatedErrors[field];
+      return updatedErrors;
+    });
   };
+  
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -63,6 +90,7 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
   };
 
   const submitData = async () => {
+    if (!validateInputs()) return; // Stop if there are validation errors
     setLoading(true);
     const formData = new FormData();
     formData.append("name", newItem.title);
@@ -130,24 +158,27 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add New Item</Text>
             <ScrollView style={styles.scrollView}>
-              <TextInput
-                placeholder="Item Title"
-                style={styles.input}
-                value={newItem.title}
-                onChangeText={(text) => handleInputChange("title", text)}
-              />
+            <TextInput
+  placeholder="Item Title"
+  style={[styles.input, errors.title ? styles.errorInput : null]}
+  value={newItem.title}
+  onChangeText={(text) => handleInputChange("title", text)}
+/>
+{errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
               <TextInput
                 placeholder="Price"
-                style={styles.input}
+                style={[styles.input, errors.price ? styles.errorInput : null]}
                 value={newItem.price}
                 onChangeText={(text) => handleInputChange("price", text)}
                 keyboardType="numeric"
               />
+              {errors.price && <Text style={styles.errorText}>{errors.price}</Text>}
+
               <Picker
-                selectedValue={newItem.garmentType}
-                style={styles.picker}
-                onValueChange={(value) => handleInputChange("garmentType", value)}
-              >
+  selectedValue={newItem.garmentType}
+  style={[styles.picker, errors.garmentType ? styles.errorPicker : null]}
+  onValueChange={(value) => handleInputChange("garmentType", value)}
+>
                 <Picker.Item label="Select Garment Type" value="" />
                 <Picker.Item label="Anarkali" value="anarkali" />
                 <Picker.Item label="Blazer" value="blazer" />
@@ -166,9 +197,10 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
                 <Picker.Item label="Trousers" value="trousers" />
                 <Picker.Item label="T-Shirt" value="t-shirt" />
               </Picker>
+              {errors.garmentType && <Text style={styles.errorText}>{errors.garmentType}</Text>}
               <Picker
                 selectedValue={newItem.colour}
-                style={styles.picker}
+                style={[styles.picker, errors.colour ? styles.errorPicker : null]}
                 onValueChange={(value) => handleInputChange("colour", value)}
               >
                 <Picker.Item label="Select Colour" value="" />
@@ -185,9 +217,10 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
                 <Picker.Item label="White" value="white" />
                 <Picker.Item label="Yellow" value="yellow" />
               </Picker>
+              {errors.colour && <Text style={styles.errorText}>{errors.colour}</Text>}
               <Picker
                 selectedValue={newItem.size}
-                style={styles.picker}
+                style={[styles.picker, errors.size ? styles.errorPicker : null]}
                 onValueChange={(value) => handleInputChange("size", value)}
               >
                 <Picker.Item label="Select Size" value="" />
@@ -197,16 +230,20 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
                 <Picker.Item label="L" value="L" />
                 <Picker.Item label="XL" value="XL" />
               </Picker>
+              {errors.size && <Text style={styles.errorText}>{errors.size}</Text>}
               <TextInput
                 placeholder="Quantity"
-                style={styles.input}
+                style={[styles.input, errors.quantity ? styles.errorInput : null]}
                 value={newItem.quantity}
                 onChangeText={(text) => handleInputChange("quantity", text)}
                 keyboardType="numeric"
               />
+              {errors.quantity && <Text style={styles.errorText}>{errors.quantity}</Text>}
               <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-                <Text style={styles.uploadButtonText}>Pick Images (Upto 3)</Text>
-              </TouchableOpacity>
+  <Text style={styles.uploadButtonText}>Pick Images (Upto 3)</Text>
+</TouchableOpacity>
+{errors.images && <Text style={styles.errorText}>{errors.images}</Text>}
+
               {newItem.images.length > 0 && (
                 <View style={styles.imagePreviewContainer}>
                   <Text style={styles.selectedImagesText}>Selected Images:</Text>
@@ -235,9 +272,12 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
                   <Text style={styles.saveButtonText}>{loading ? "Saving..." : "Save"}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.cancelButton}
-                  onPress={() => setModalVisible(false)}
-                >
+  style={styles.cancelButton}
+  onPress={() => {
+    setModalVisible(false);
+    setErrors({}); // Clear all errors
+  }}
+>
                   <Text style={styles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
               </View>
@@ -356,6 +396,21 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 15, // Add spacing below the text
   },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginTop: -8,
+    marginBottom: 8,
+  },
+  errorInput: {
+    borderColor: "red",
+    borderWidth: 1,
+  },
+  errorPicker: {
+    borderColor: "red",
+    borderWidth: 1,
+  },
+  
   
   
 });
