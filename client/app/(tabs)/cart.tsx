@@ -2,22 +2,43 @@ import React, { useState, useEffect } from "react";
 import { FlatList, Text, View, TouchableOpacity, ActivityIndicator, Alert, Image, StyleSheet, ScrollView, TextInput } from "react-native";
 import axios from "axios";
 import { Ionicons } from "@expo/vector-icons";
-
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
 const CartScreen: React.FC = () => {
   const [cart, setCart] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
+  const [accessToken, setAccessToken] = useState('');
   const [isAddButtonDisabled, setIsAddButtonDisabled] = useState(false);
+  const [disabledProducts, setDisabledProducts] = useState<any>({});
 
-  // Hardcoded tokens for testing
-  const hardcodedAccessToken =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NzQ3NGJjOTA4ZTlmOGM5ODdhNTQ5ZWMiLCJpYXQiOjE3MzI4MTkwNzYsImV4cCI6MTczMjkwNTQ3Nn0._XD7ij00YUQQCImqfeKpgAgnLAH6TJlcrKfuINrjy3I";
+  useEffect(() => {
+    const getAccessToken = async () => {
+      const token = await AsyncStorage.getItem('accessToken');
+      console.log('Retrieved Token:', token);
+      if (token) {
+        setAccessToken(token);
+      } else {
+       
+        console.log('No access token found');
+      }
+    };
+
+    getAccessToken();
+  }, []);
+  //wait for access token to be set
+  useEffect(() => {
+    if (accessToken) {
+      fetchCart();
+    }
+  }, [accessToken]);
+
 
   const fetchCart = async () => {
     try {
+      
       const response = await axios.get("http://localhost:8000/api/v1/cart/fetchCart", {
-        headers: { Authorization: `Bearer ${hardcodedAccessToken}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
       setCart(response.data.data || response.data);
     } catch (err: any) {
@@ -27,79 +48,112 @@ const CartScreen: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    fetchCart();
-  }, []);
-
-
-
   const handleUpdateQuantity = async (productId: string, action: "increase" | "decrease") => {
     const quantityUpdate = action === "increase" ? 1 : -1;
+    console.log('Updating quantity for product:', productId);
+    console.log('Quantity Update:', quantityUpdate);
 
-    // Clone the cart products and modify the quantity locally
+    // Update the cart locally
     const updatedProducts = cart!.products.map((item: any) => {
       if (item.product._id === productId) {
         const newQuantity = item.quantity + quantityUpdate;
-
         if (newQuantity >= 1) {
           return { ...item, quantity: newQuantity };
         } else {
-          // If quantity is 0 or less, remove the item
-          return null;
+          return null; // Removes the item if quantity is less than 1
         }
       }
       return item;
-    }).filter((item: null) => item !== null); // Remove any `null` values (items with quantity 0)
+    }).filter((item: any) => item !== null);
 
-    // Recalculate the total amount after updating the quantity
     const updatedTotalAmount = updatedProducts.reduce(
       (sum: number, item: any) => sum + item.product.price * item.quantity,
       0
     );
-
-    // Update the cart state with new products and total amount
     setCart({ ...cart!, products: updatedProducts, totalAmount: updatedTotalAmount });
 
     try {
       if (quantityUpdate > 0) {
-        // Call the addToCart API to increase the quantity
+        // Increasing quantity
         await axios.patch(
           `http://localhost:8000/api/v1/cart/addToCart/${productId}`,
           { quantity: quantityUpdate },
-          { headers: { Authorization: `Bearer ${hardcodedAccessToken}` } }
+          { headers: { Authorization: `Bearer ${accessToken}` } }
         );
       } else {
-        // Call the removeFromCart API to remove the product when quantity reaches 0
+        // Decreasing quantity
         await axios.patch(
           `http://localhost:8000/api/v1/cart/removeFromCart/${productId}`,
           { quantity: Math.abs(quantityUpdate) },
-          { headers: { Authorization: `Bearer ${hardcodedAccessToken}` } }
+          { headers: { Authorization: `Bearer ${accessToken}` } }
         );
       }
-    } catch (err) {
-      Alert.alert("Error", "Failed to update product quantity on the server");
+    } catch (err: any) {
+      if (err.response?.status === 400) {
+        console.error("Error updating quantity:", err.response?.data?.message || "Unknown error");
+
+        // Disable "+" button if the limit is reached
+        setDisabledProducts((prev: any) => ({ ...prev, [productId]: true }));
+
+        // Alert user about the issue
+        Alert.alert("Limit Reached", err.response?.data?.message || "No more items available.");
+      } else {
+        console.error("Unexpected error:", err);
+        Alert.alert("Error", "Failed to update product quantity on the server.");
+      }
     }
   };
 
-  const handleRemoveFromCart = (productId: string) => {
-    const updatedProducts = cart.products.filter((item: { product: { _id: string; }; }) => item.product._id !== productId);
 
-    setCart((prevCart: any) => {
-      if (updatedProducts.length === 0) {
-        return { ...prevCart, products: updatedProducts, totalAmount: 0 };
+  
+  const handleRemoveFromCart = async (productId: string) => {
+    try {
+     
+      if (!cart || !cart.products) {
+        Alert.alert("Error", "Cart is empty or not available.");
+        return;
       }
-
-      const updatedTotal = updatedProducts.reduce(
-        (sum: number, item: { product: { price: number; quantity: number; }; }) => sum + item.product.price * item.product.quantity,
+  
+      await axios.patch(
+        `http://localhost:8000/api/v1/cart/removeFromCart/${productId}`,
+        {}, //remove item completely
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+  
+      // Filter the product to remove it from the cart
+      const updatedProducts = cart.products.filter((item: { product: { _id: string; }; }) => item.product._id !== productId);
+  
+      // Update the cart state with the updated product list and total amount
+      const updatedTotalAmount = updatedProducts.reduce(
+        (sum: number, item: {
+          quantity: number; product: { price: number }; 
+}) => {
+          // Ensure valid numbers before performing arithmetic
+          const price = item.product.price || 0;
+          const quantity = item.quantity || 0;
+          return sum + (price * quantity);
+        },
         0
       );
-      return { ...prevCart, products: updatedProducts, totalAmount: updatedTotal };
-    });
+  
+      // Ensure totalAmount is not NaN or undefined
+      if (isNaN(updatedTotalAmount)) {
+        throw new Error("Invalid total amount");
+      }
+  
+      setCart((prevCart: any) => {
+        return { ...prevCart, products: updatedProducts, totalAmount: updatedTotalAmount };
+      });
+    } catch (err: any) {
+      Alert.alert("Error", `Failed to remove item from cart: ${err.message || err}`);
+    }
   };
+  
+
   //   // Apply coupon
   const applyCoupon = () => {
     if (couponCode.toLowerCase() === "save10") {
-      setDiscount(10); // 10% discount
+      setDiscount(10); 
       Alert.alert("Success", "Coupon applied: 10% discount!");
     } else {
       setDiscount(0);
@@ -185,26 +239,30 @@ const CartScreen: React.FC = () => {
 
                   {/* Quantity Controls */}
                   <View style={[styles.quantityControls, { flex: 1 }]}>
-                    <TouchableOpacity
-                      onPress={() => handleUpdateQuantity(item.product._id, "decrease")}
-                      disabled={item.quantity === 1}
-                    >
+                  <TouchableOpacity onPress={() => handleUpdateQuantity(item.product._id, "decrease")}>
                       <Ionicons
                         name="remove-circle-outline"
                         size={20}
                         color="#333"
                       />
                     </TouchableOpacity>
-                    <Text style={styles.quantity}>{item.quantity}</Text>
+                    <Text style={{ marginHorizontal: 10 }}>{item.quantity}</Text>
+                    {/* "+" Button */}
                     <TouchableOpacity
                       onPress={() => handleUpdateQuantity(item.product._id, "increase")}
-                      disabled={item.product.quantity === item.quantity}
+                      disabled={item.quantity == item.product.quantity || disabledProducts[item.product._id]}
                     >
-                      <Ionicons name="add-circle-outline" size={20} color="#333" />
+
+
+                      <Ionicons
+                        name="add-circle-outline"
+                        size={20}
+                        color={item.quantity >= item.product.quantity ? '#CCC' : '#333'}
+                      />
                     </TouchableOpacity>
                   </View>
 
-                  {/* Total Price */}
+                  
                   <Text style={[styles.detailText, { flex: 1 }]}>
                     ${(item.product.price * item.quantity).toFixed(2)}
                   </Text>
@@ -239,7 +297,7 @@ const CartScreen: React.FC = () => {
 
 
           <Text style={styles.totalText}>Discount: {discount}%</Text>
-          <Text style={styles.totalText}>Total: ${cart.totalAmount}</Text>
+          <Text style={styles.totalText}>Total: Rs. {cart.totalAmount}</Text>
 
 
           <TouchableOpacity style={styles.checkoutButton} onPress={() => alert("Proceeding to checkout")}>
