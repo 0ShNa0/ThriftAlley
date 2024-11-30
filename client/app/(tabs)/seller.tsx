@@ -96,7 +96,8 @@ const SellerWindow = () => {
   accessToken={accessToken || ''} // Pass accessToken as a prop (ensure it's not null or undefined)
 />
       )}
-      <AddSellerButton accessToken={accessToken as string}/>
+      {/* Display Add Product Button only when logged in */}
+    {isLoggedIn && <AddSellerButton accessToken={accessToken as string} />}
     </View>
   );
 };

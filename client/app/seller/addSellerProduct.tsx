@@ -150,9 +150,12 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
                 <Picker.Item label="Select Garment Type" value="" />
                 <Picker.Item label="Dress" value="dress" />
                 <Picker.Item label="Jeans" value="jeans" />
+                <Picker.Item label="Kurta" value="kurta" />
+                <Picker.Item label="Leggings" value="leggings" />
                 <Picker.Item label="Pants" value="pants" />
                 <Picker.Item label="Shirt" value="shirt" />
                 <Picker.Item label="Shorts" value="shorts" />
+                <Picker.Item label="Top" value="top" />
                 <Picker.Item label="Trousers" value="trousers" />
                 <Picker.Item label="T-Shirt" value="t-shirt" />
               </Picker>
@@ -164,6 +167,9 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
                 <Picker.Item label="Select Colour" value="" />
                 <Picker.Item label="Black" value="black" />
                 <Picker.Item label="Blue" value="blue" />
+                <Picker.Item label="Green" value="green" />
+                <Picker.Item label="Pink" value="pink" />
+                <Picker.Item label="Purple" value="purple" />
                 <Picker.Item label="Red" value="red" />
                 <Picker.Item label="White" value="white" />
                 <Picker.Item label="Yellow" value="yellow" />
