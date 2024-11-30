@@ -25,9 +25,10 @@ type NewItem = {
 
 interface AddSellerButtonProps {
   accessToken: string;
+  refetchProducts: () => void;  // Add the refetch function as a prop
 }
 
-const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
+const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken, refetchProducts }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [newItem, setNewItem] = useState<NewItem>({
     title: "",
@@ -106,6 +107,9 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
         quantity: "1",
         images: [],
       });
+
+      // After successfully adding the item, refetch the product list
+      refetchProducts();
     } catch (error) {
       console.error("Error submitting data:", error);
     } finally {
@@ -153,6 +157,7 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
                 <Picker.Item label="Kurta" value="kurta" />
                 <Picker.Item label="Leggings" value="leggings" />
                 <Picker.Item label="Pants" value="pants" />
+                <Picker.Item label="Pyjama" value="pyjama" />
                 <Picker.Item label="Shirt" value="shirt" />
                 <Picker.Item label="Shorts" value="shorts" />
                 <Picker.Item label="Top" value="top" />
@@ -166,6 +171,7 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
               >
                 <Picker.Item label="Select Colour" value="" />
                 <Picker.Item label="Black" value="black" />
+                <Picker.Item label="Brown" value="brown" />
                 <Picker.Item label="Blue" value="blue" />
                 <Picker.Item label="Green" value="green" />
                 <Picker.Item label="Pink" value="pink" />
@@ -194,14 +200,27 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
                 keyboardType="numeric"
               />
               <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-                <Text style={styles.uploadButtonText}>Pick Images</Text>
+                <Text style={styles.uploadButtonText}>Pick Images (Upto 3)</Text>
               </TouchableOpacity>
               {newItem.images.length > 0 && (
                 <View style={styles.imagePreviewContainer}>
                   <Text>Selected Images:</Text>
                   <ScrollView horizontal>
                     {newItem.images.map((uri, index) => (
-                      <Image key={index} source={{ uri }} style={styles.imagePreview} />
+                      <View key={index} style={styles.imageWrapper}>
+                        <Image source={{ uri }} style={styles.imagePreview} />
+                        <TouchableOpacity
+                          style={styles.removeImageButton}
+                          onPress={() => {
+                            setNewItem((prev) => ({
+                              ...prev,
+                              images: prev.images.filter((_, i) => i !== index),
+                            }));
+                          }}
+                        >
+                          <Text style={styles.removeImageButtonText}>×</Text>
+                        </TouchableOpacity>
+                      </View>
                     ))}
                   </ScrollView>
                 </View>
@@ -289,6 +308,28 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginRight: 10,
   },
+  imageWrapper: {
+    position: 'relative',
+    marginRight: 10,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderRadius: 50,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeImageButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+    lineHeight: 20,
+  },
+  
   
 });
 
