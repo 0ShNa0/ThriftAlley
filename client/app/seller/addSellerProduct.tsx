@@ -1,8 +1,17 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, ScrollView } from "react-native";
-import { Picker } from '@react-native-picker/picker';
-import * as ImagePicker from 'expo-image-picker';
-import axios from 'axios';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Modal,
+  StyleSheet,
+  ScrollView,
+  Image,
+} from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import * as ImagePicker from "expo-image-picker";
+import axios from "axios";
 
 type NewItem = {
   title: string;
@@ -11,7 +20,7 @@ type NewItem = {
   colour: string;
   size: string;
   quantity: string;
-  images: any[]; // Array of image URIs
+  images: string[]; // Array of image URIs
 };
 
 interface AddSellerButtonProps {
@@ -29,8 +38,8 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
     quantity: "1",
     images: [],
   });
+  const [loading, setLoading] = useState(false);
 
-  // Handle input changes
   const handleInputChange = (field: keyof NewItem, value: string) => {
     setNewItem((prev) => ({
       ...prev,
@@ -38,7 +47,6 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
     }));
   };
 
-  // Handle Image Selection
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -54,8 +62,8 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
     }
   };
 
-  // Submit the data to the API
   const submitData = async () => {
+    setLoading(true);
     const formData = new FormData();
     formData.append("name", newItem.title);
     formData.append("garmentType", newItem.garmentType);
@@ -64,43 +72,53 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
     formData.append("size", newItem.size);
     formData.append("quantity", newItem.quantity);
 
-    // Append images as Blobs
     for (let i = 0; i < newItem.images.length; i++) {
       try {
-        const response = await fetch(newItem.images[i]); // Fetch the image from URI
-        const blob = await response.blob(); // Convert to Blob
-
-        formData.append("images", blob, `image${i}.jpg`); // Append the Blob to formData
+        const response = await fetch(newItem.images[i]);
+        const blob = await response.blob();
+        formData.append("images", blob, `image${i}.jpg`);
       } catch (error) {
-        console.error("Failed to fetch and append image:", error);
+        console.error("Error appending image:", error);
+        setLoading(false);
+        return;
       }
     }
 
-    // Send the data to the backend
     try {
-      const response = await axios.post('http://localhost:8000/api/v1/products/addForSelling', formData, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'multipart/form-data',
-        },
+      const response = await axios.post(
+        "http://localhost:8000/api/v1/products/addForSelling",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      console.log("Item added successfully:", response.data);
+      setModalVisible(false);
+      setNewItem({
+        title: "",
+        price: "",
+        garmentType: "",
+        colour: "",
+        size: "",
+        quantity: "1",
+        images: [],
       });
-      console.log('Item added successfully:', response.data);
     } catch (error) {
-      console.error('Error submitting data:', error);
+      console.error("Error submitting data:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Add Item Button */}
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => setModalVisible(true)}
-      >
+      <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
         <Text style={styles.addButtonText}>+ Add Item</Text>
       </TouchableOpacity>
 
-      {/* Add Item Modal */}
       <Modal
         visible={modalVisible}
         transparent={true}
@@ -110,17 +128,13 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add New Item</Text>
-
             <ScrollView style={styles.scrollView}>
-              {/* Title Input */}
               <TextInput
                 placeholder="Item Title"
                 style={styles.input}
                 value={newItem.title}
                 onChangeText={(text) => handleInputChange("title", text)}
               />
-
-              {/* Price Input */}
               <TextInput
                 placeholder="Price"
                 style={styles.input}
@@ -128,44 +142,44 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
                 onChangeText={(text) => handleInputChange("price", text)}
                 keyboardType="numeric"
               />
-
-              {/* Garment Type Picker */}
               <Picker
                 selectedValue={newItem.garmentType}
                 style={styles.picker}
-                onValueChange={(itemValue) => handleInputChange("garmentType", itemValue)}
+                onValueChange={(value) => handleInputChange("garmentType", value)}
               >
                 <Picker.Item label="Select Garment Type" value="" />
                 <Picker.Item label="Dress" value="dress" />
-                <Picker.Item label="Shirt" value="shirt" />
+                <Picker.Item label="Jeans" value="jeans" />
                 <Picker.Item label="Pants" value="pants" />
+                <Picker.Item label="Shirt" value="shirt" />
+                <Picker.Item label="Shorts" value="shorts" />
+                <Picker.Item label="Trousers" value="trousers" />
                 <Picker.Item label="T-Shirt" value="t-shirt" />
               </Picker>
-
-              {/* Colour Picker */}
               <Picker
                 selectedValue={newItem.colour}
                 style={styles.picker}
-                onValueChange={(itemValue) => handleInputChange("colour", itemValue)}
+                onValueChange={(value) => handleInputChange("colour", value)}
               >
                 <Picker.Item label="Select Colour" value="" />
                 <Picker.Item label="Black" value="black" />
+                <Picker.Item label="Blue" value="blue" />
                 <Picker.Item label="Red" value="red" />
+                <Picker.Item label="White" value="white" />
+                <Picker.Item label="Yellow" value="yellow" />
               </Picker>
-
-              {/* Size Picker */}
               <Picker
                 selectedValue={newItem.size}
                 style={styles.picker}
-                onValueChange={(itemValue) => handleInputChange("size", itemValue)}
+                onValueChange={(value) => handleInputChange("size", value)}
               >
                 <Picker.Item label="Select Size" value="" />
+                <Picker.Item label="XS" value="XS" />
                 <Picker.Item label="S" value="S" />
                 <Picker.Item label="M" value="M" />
                 <Picker.Item label="L" value="L" />
+                <Picker.Item label="XL" value="XL" />
               </Picker>
-
-              {/* Quantity Input */}
               <TextInput
                 placeholder="Quantity"
                 style={styles.input}
@@ -173,22 +187,19 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
                 onChangeText={(text) => handleInputChange("quantity", text)}
                 keyboardType="numeric"
               />
-
-              {/* Image Upload Button */}
               <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
                 <Text style={styles.uploadButtonText}>Pick Images</Text>
               </TouchableOpacity>
-
-              {/* Image Upload List */}
               {newItem.images.length > 0 && (
-                <View>
+                <View style={styles.imagePreviewContainer}>
                   <Text>Selected Images:</Text>
-                  {newItem.images.map((uri, index) => (
-                    <Text key={index}>{uri}</Text>
-                  ))}
+                  <ScrollView horizontal>
+                    {newItem.images.map((uri, index) => (
+                      <Image key={index} source={{ uri }} style={styles.imagePreview} />
+                    ))}
+                  </ScrollView>
                 </View>
               )}
-
               <View style={styles.buttonRow}>
                 <TouchableOpacity
                   style={styles.cancelButton}
@@ -197,7 +208,7 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
                   <Text style={styles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.saveButton} onPress={submitData}>
-                  <Text style={styles.saveButtonText}>Save</Text>
+                  <Text style={styles.saveButtonText}>{loading ? "Saving..." : "Save"}</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -263,6 +274,16 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   saveButtonText: { color: 'white' },
+  imagePreviewContainer: {
+    marginVertical: 10,
+  },
+  imagePreview: {
+    width: 100,
+    height: 100,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  
 });
 
 export default AddSellerButton;
