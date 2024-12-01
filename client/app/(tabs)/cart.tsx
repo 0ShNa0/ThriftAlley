@@ -177,10 +177,12 @@ const CartScreen: React.FC = () => {
       Alert.alert("Your cart is empty.");
       return;
     }
-    router.push({
-      pathname: '/Payment',
+    /*router.push({
+      pathname: '../../payment.tsx',
       params: { totalAmount: cart.totalAmount }, // Passing the total amount to the Payment screen
     });
+    */
+    router.push(`/payment?totalAmount=${cart.totalAmount}`);
   };
 
   if (loading) {

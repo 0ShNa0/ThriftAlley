@@ -97,7 +97,7 @@ const Payment = () => {
           <>
             <Text style={styles.header}>Ready to Pay?</Text>
             <Text style={styles.message}>
-              Your total amount is ${totalAmount}.
+              Your total amount is Rs.{totalAmount}.
             </Text>
             <TouchableOpacity style={styles.greenButton} onPress={handlePayNow}>
               <Text style={styles.buttonText}>Pay Now</Text>
