@@ -80,14 +80,22 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
       allowsEditing: true,
       quality: 1,
     });
-
+  
     if (!result.canceled && result.assets) {
       setNewItem((prev) => ({
         ...prev,
         images: [...prev.images, result.assets[0].uri],
       }));
+  
+      // Clear the error related to images once an image is picked
+      setErrors((prevErrors) => {
+        const updatedErrors = { ...prevErrors };
+        delete updatedErrors.images;  // Remove the image error
+        return updatedErrors;
+      });
     }
   };
+  
 
   const submitData = async () => {
     if (!validateInputs()) return; // Stop if there are validation errors
@@ -182,6 +190,7 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
                 <Picker.Item label="Select Garment Type" value="" />
                 <Picker.Item label="Anarkali" value="anarkali" />
                 <Picker.Item label="Blazer" value="blazer" />
+                <Picker.Item label="Coat" value="coat" />
                 <Picker.Item label="Dress" value="dress" />
                 <Picker.Item label="Jacket" value="jacket" />
                 <Picker.Item label="Jeans" value="jeans" />
@@ -252,16 +261,25 @@ const AddSellerButton: React.FC<AddSellerButtonProps> = ({ accessToken }) => {
                       <View key={index} style={styles.imageWrapper}>
                         <Image source={{ uri }} style={styles.imagePreview} />
                         <TouchableOpacity
-                          style={styles.removeImageButton}
-                          onPress={() => {
-                            setNewItem((prev) => ({
-                              ...prev,
-                              images: prev.images.filter((_, i) => i !== index),
-                            }));
-                          }}
-                        >
-                          <Text style={styles.removeImageButtonText}>×</Text>
-                        </TouchableOpacity>
+  style={styles.removeImageButton}
+  onPress={() => {
+    setNewItem((prev) => {
+      const updatedImages = prev.images.filter((_, i) => i !== index);
+      // Check the number of images after removal and update error accordingly
+      const newErrors = { ...errors };
+      if (updatedImages.length <= 3) {
+        delete newErrors.images;  // Remove the error if there are 3 or fewer images
+      }
+      setErrors(newErrors); // Update the errors state
+      return {
+        ...prev,
+        images: updatedImages,
+      };
+    });
+  }}
+>
+  <Text style={styles.removeImageButtonText}>×</Text>
+</TouchableOpacity>
                       </View>
                     ))}
                   </ScrollView>
@@ -410,9 +428,6 @@ const styles = StyleSheet.create({
     borderColor: "red",
     borderWidth: 1,
   },
-  
-  
-  
 });
 
 export default AddSellerButton;
