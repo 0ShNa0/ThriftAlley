@@ -3,15 +3,23 @@ import { FlatList, Text, View, TouchableOpacity, ActivityIndicator, Alert, Image
 import axios from "axios";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from '@react-native-async-storage/async-storage'; 
+//import { useNavigation,NavigationProp } from '@react-navigation/native';
+
+
+import { useRouter,useNavigation } from "expo-router";
+
 const CartScreen: React.FC = () => {
+  const router = useRouter();
   const [cart, setCart] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [accessToken, setAccessToken] = useState('');
-  const [isAddButtonDisabled, setIsAddButtonDisabled] = useState(false);
   const [disabledProducts, setDisabledProducts] = useState<any>({});
-
+  
+ 
+  //const hardcodedtoken="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NzRiZDllMzcwMjZkY2RlOWMwOWZjYzEiLCJpYXQiOjE3MzMwMjYzNDEsImV4cCI6MTczMzExMjc0MX0.JXkEnk4lnwR2qTuAWpJ985VCZZTZ4hfedqhdiSsXezk"
+ 
   useEffect(() => {
     const getAccessToken = async () => {
       const token = await AsyncStorage.getItem('accessToken');
@@ -26,7 +34,9 @@ const CartScreen: React.FC = () => {
 
     getAccessToken();
   }, []);
-  //wait for access token to be set
+  
+  // //wait for access token to be set
+
   useEffect(() => {
     if (accessToken) {
       fetchCart();
@@ -60,7 +70,7 @@ const CartScreen: React.FC = () => {
         if (newQuantity >= 1) {
           return { ...item, quantity: newQuantity };
         } else {
-          return null; // Removes the item if quantity is less than 1
+          return null; 
         }
       }
       return item;
@@ -159,6 +169,18 @@ const CartScreen: React.FC = () => {
       setDiscount(0);
       Alert.alert("Error", "Invalid coupon code.");
     }
+  };
+
+  const handleProceedToCheckout = () => {
+    // Navigate to the Payment screen using the router.push method
+    if (!cart || cart.length === 0) {
+      Alert.alert("Your cart is empty.");
+      return;
+    }
+    router.push({
+      pathname: '/Payment',
+      params: { totalAmount: cart.totalAmount }, // Passing the total amount to the Payment screen
+    });
   };
 
   if (loading) {
@@ -300,7 +322,7 @@ const CartScreen: React.FC = () => {
           <Text style={styles.totalText}>Total: Rs. {cart.totalAmount}</Text>
 
 
-          <TouchableOpacity style={styles.checkoutButton} onPress={() => alert("Proceeding to checkout")}>
+          <TouchableOpacity style={styles.checkoutButton} onPress={handleProceedToCheckout}>
             <Text style={styles.buttonText}>Proceed to Checkout</Text>
           </TouchableOpacity>
         </View>
@@ -450,3 +472,47 @@ export default CartScreen;
 
 
 
+
+
+
+
+// app/cart.tsx
+// import React from 'react';
+// import { View, Text, Button, StyleSheet } from 'react-native';
+// import { useRouter } from 'expo-router';
+
+// const Cart = () => {
+//   const router = useRouter();
+
+//   const handlePayment = () => {
+//     router.push('/Payment'); // Navigates to the Payment screen
+//   };
+
+//   return (
+//     <View style={styles.container}>
+//       <Text style={styles.header}>Your Cart</Text>
+//       <Text style={styles.message}>Items: 3</Text>
+//       <Button title="Proceed to Payment" onPress={handlePayment} />
+//     </View>
+//   );
+// };
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     padding: 20,
+//   },
+//   header: {
+//     fontSize: 24,
+//     fontWeight: 'bold',
+//     marginBottom: 20,
+//   },
+//   message: {
+//     fontSize: 18,
+//     marginBottom: 20,
+//   },
+// });
+
+// export default Cart;
