@@ -1,117 +1,176 @@
+
 import React, { useState } from 'react';
-import { View, Button, Text, Image, StyleSheet } from 'react-native';
-import Constants from 'expo-constants';  // Import Constants from expo
-import RazorpayCheckout from 'react-native-razorpay';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import LottieView from 'lottie-react-native';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 
-const PaymentScreen = () => {
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
-  const amount = 1000;
+const Payment = () => {
+  const router = useRouter();
+  const { totalAmount } = useLocalSearchParams(); // Retrieve totalAmount from route params
 
-  // Access Razorpay key from Constants.manifest.extra
-  const razorpayTestKey = Constants.expoConfig?.extra?.razorpayKey;
-  if (!razorpayTestKey) {
-    console.error('Razorpay Key is missing!');
-  }
+  const [isPaymentProcessing, setIsPaymentProcessing] = useState(false); // Control animation visibility
+  const [isPaymentComplete, setIsPaymentComplete] = useState(false); 
 
-  // Assuming you fetched this `order_id` from your backend
-  const orderId = "order_id_from_backend"; // Replace with actual order ID
+  const handlePayNow = () => {
+    setIsPaymentProcessing(true);
 
-  const handlePayment = () => {
-    const options = {
-      description: 'Thank you for your purchase',
-      image: 'https://maigha.com/wp-content/uploads/2023/10/Untitled_design-2-removebg-preview.png',
-      currency: 'INR',
-      key: razorpayTestKey,  // Use the key from Constants
-      amount: amount * 100,
-      name: 'Maigha Inc',
-      order_id: orderId,  // Add the order_id here
-      prefill: {
-        email: 'support@maigha.com',
-        phone: '9888626111',
-        name: 'Hrushikesh Vetagiri',
-        address: {
-          city: 'Nellore',
-          state: 'Andhra Pradesh',
-          country: 'India',
-          zip: '524137',
-        },
-      },
-      theme: { color: '#09518e' },
-    };
+    // Simulate payment processing delay
+    setTimeout(() => {
+      setIsPaymentProcessing(false);
+      setIsPaymentComplete(true);
+    }, 3000); // Animation lasts for 3 seconds
+  };
 
-    RazorpayCheckout.open(options)
-      .then((data) => {
-        console.log(`Payment successful: ${data.razorpay_payment_id}`);
-        setPaymentSuccess(true);
-      })
-      .catch((error) => {
-        console.log('Payment error:', error.description, error.code);
-      });
+  const handleGoBack = () => {
+    router.push('/cart'); // Navigate back to the Cart screen
+  };
+
+  const generateInvoice = async () => {
+    try {
+      const htmlContent = `
+        <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; }
+              .header { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 20px; }
+              .content { margin-top: 20px; font-size: 18px; }
+              .footer { margin-top: 40px; text-align: center; font-size: 14px; color: gray; }
+            </style>
+          </head>
+          <body>
+            <div class="header">Payment Invoice</div>
+            <div class="content">
+              <p>Payment Successful!</p>
+              <p><strong>Total Amount: Rs. ${totalAmount}</strong></p>
+              <p>Payment ID: #${Math.floor(Math.random() * 1000000)}</p>
+              <p>Date: ${new Date().toLocaleDateString()}</p>
+            </div>
+            <div class="footer">Thank you for your purchase!</div>
+          </body>
+        </html>
+      `;
+
+      const { uri } = await Print.printToFileAsync({ html: htmlContent });
+      console.log('Invoice generated at:', uri);
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri);
+      } else {
+        Alert.alert('Error', 'Sharing is not available on this device.');
+      }
+    } catch (error) {
+      console.error('Error generating invoice:', error);
+      Alert.alert('Error', 'Failed to generate the invoice.');
+    }
   };
 
   return (
     <View style={styles.container}>
-      {paymentSuccess ? (
-        <View style={styles.paymentContainer}>
-          <Image
-            source={{
-              uri: 'https://maigha.com/wp-content/uploads/2023/10/Untitled_design-2-removebg-preview.png',
-            }}
-            style={styles.image}
+      <View style={styles.card}>
+        {isPaymentProcessing ? (
+          // Payment processing animation
+          <LottieView
+            source={require('@/assets/Animation - 1732948365966.json')} // Lottie success animation
+            autoPlay
+            loop={false}
+            style={styles.lottie}
           />
-          <Text style={styles.description}>Thank you for your purchase!</Text>
-          <Text style={styles.amount}>Amount: {amount} INR</Text>
-        </View>
-      ) : (
-        <View style={styles.buttonContainer}>
-          <Button title="Pay Now" onPress={handlePayment} color="#09518e" />
-        </View>
-      )}
+        ) : isPaymentComplete ? (
+          // Payment success message
+          <>
+            <Text style={styles.header}>Payment Successful!</Text>
+            <Text style={styles.message}>
+              Your payment has been processed successfully.
+            </Text>
+            <Text style={styles.totalAmount}>Total Amount: Rs. {totalAmount}</Text>
+            <TouchableOpacity style={styles.greenButton} onPress={generateInvoice}>
+              <Text style={styles.buttonText}>Download Invoice</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.greenButton, styles.buttonSpacing]} onPress={handleGoBack}>
+              <Text style={styles.buttonText}>Back to Cart</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          // Initial "Pay Now" button
+          <>
+            <Text style={styles.header}>Ready to Pay?</Text>
+            <Text style={styles.message}>
+              Your total amount is ${totalAmount}.
+            </Text>
+            <TouchableOpacity style={styles.greenButton} onPress={handlePayNow}>
+              <Text style={styles.buttonText}>Pay Now</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  buttonContainer: {
-    width: 200,
-    height: 50,
-    borderRadius: 10,
-    fontSize: 18,
-  },
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  paymentContainer: {
-    alignItems: 'center',
-    backgroundColor: '#fff',
     padding: 20,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    backgroundColor: '#f9f9f9', // Softer background
   },
-  image: {
-    width: 150,
-    height: 100,
-    resizeMode: 'cover',
-    borderRadius: 10,
-    marginBottom: 10,
+  card: {
+    width: '90%',
+    padding: 20,
+    borderRadius: 15,
+    backgroundColor: '#ffffff',
+    shadowColor: '#000', // Shadow color
+    shadowOffset: { width: 0, height: 5 }, 
+    shadowOpacity: 0.15, 
+    shadowRadius: 10, 
+    elevation: 10, 
+    alignItems: 'center',
   },
-  description: {
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#2c3e50',
+  },
+  message: {
     fontSize: 18,
-    marginBottom: 10,
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#34495e',
   },
-  amount: {
+  totalAmount: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#27ae60',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  greenButton: {
+    backgroundColor: '#27ae60',
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderRadius: 25,
+    alignItems: 'center',
+    width: '50%',
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
     fontSize: 16,
+  },
+  buttonSpacing: {
+    marginTop: 15,
+  },
+  lottie: {
+    width: 150,
+    height: 150,
     marginBottom: 20,
   },
 });
 
-export default PaymentScreen;
+
+export default Payment;

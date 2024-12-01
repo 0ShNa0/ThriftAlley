@@ -3,6 +3,6 @@ import { performPayment } from "../controllers/payment.controller.js";
 
 const paymentRouter = Router();
 
-paymentRouter.route("/pay/:userId").post(performPayment);
+paymentRouter.route("/pay").post(verifyToken, performPayment);
 
 export { paymentRouter };
