@@ -33,7 +33,7 @@ cd server
 2. Configure environment variables
 3. Install dependencies:
 ```bash
-npm install dotenv
+npm install 
 ```
 4. Start backend server
 ```bash
